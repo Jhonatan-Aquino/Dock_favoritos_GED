@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Barra de favoritos do GED
 // @namespace    http://tampermonkey.net/
-// @version      1.4.1
+// @version      1.4.2
 // @description  Adiciona uma barra de favoritos flutuante ao sistema GED
 // @author        Jhonatan Aquino
 // @match         https://*.sigeduca.seduc.mt.gov.br/ged/*
@@ -21,7 +21,7 @@
         return; // Não executa o script se estiver em um iframe
     }
 
-        // Verificar se a página tem o atributo data-page="tela-documento" ou se é um popup de mensagem
+    // Verificar se a página tem o atributo data-page="tela-documento" ou se é um popup de mensagem
     if (document.documentElement.getAttribute('data-page') === 'tela-documento' ||
         document.title === 'Popup de Mensagem') {
         return; // Não executa o script se for a tela de documento ou popup de mensagem
@@ -369,25 +369,12 @@
             }
         });
 
-        // Inverter a ordem dos favoritos para que os mais recentes fiquem no topo
-        const reversedFavorites = [...favorites].reverse();
-
-        // Primeiro, adicionar os itens existentes
-        reversedFavorites.forEach(fav => {
+        // Adicionar cada favorito à barra na ordem exata como foi salva
+        favorites.forEach(fav => {
             const isNewItem = !lastFavorites.some(lastFav => lastFav.url === fav.url);
-            if (!isNewItem) {
-                const item = createFavoriteItem(fav);
-                item.style.opacity = '1';
-                dock.appendChild(item);
-            }
-        });
+            const item = createFavoriteItem(fav);
 
-        // Depois, adicionar os novos itens com animação
-        reversedFavorites.forEach(fav => {
-            const isNewItem = !lastFavorites.some(lastFav => lastFav.url === fav.url);
             if (isNewItem) {
-                const item = createFavoriteItem(fav);
-
                 // Criar e adicionar o efeito de captura
                 const screenCapture = document.createElement('div');
                 screenCapture.id = 'screen-capture';
@@ -410,6 +397,9 @@
                     item.classList.add('new-item', 'highlight');
                     dock.insertBefore(item, addBtn.nextSibling);
                 }, 900);
+            } else {
+                item.style.opacity = '1';
+                dock.appendChild(item);
             }
         });
 
@@ -499,13 +489,37 @@
     function updateFavoritesOrder() {
         const dock = document.getElementById('ged-favorites-dock');
         const items = [...dock.querySelectorAll('.dock-item:not(#add-favorite-btn)')];
-        const favorites = items.map(item => ({
-            url: item.href,
-            title: item.querySelector('span').textContent,
-            color: item.querySelector('.color-indicator').style.backgroundColor,
-            addedAt: new Date().toISOString()
-        }));
-        GM_setValue('gedFavorites', favorites);
+
+        // Obter todos os favoritos atuais
+        const currentFavorites = GM_getValue('gedFavorites', []);
+
+        // Criar um mapa de favoritos por URL para fácil acesso
+        const favoritesMap = new Map(currentFavorites.map(fav => [fav.url, fav]));
+
+        // Criar nova lista de favoritos mantendo todas as propriedades originais
+        const updatedFavorites = items.map(item => {
+            const url = item.href;
+            const existingFavorite = favoritesMap.get(url);
+
+            // Se o favorito existir, manter todas as suas propriedades
+            if (existingFavorite) {
+                return {
+                    ...existingFavorite, // Mantém todas as propriedades originais
+                    title: item.querySelector('span').textContent // Atualiza apenas o título se mudou
+                };
+            }
+
+            // Se por algum motivo o favorito não existir, criar um novo
+            return {
+                url: url,
+                title: item.querySelector('span').textContent,
+                color: item.querySelector('.color-indicator').style.backgroundColor,
+                addedAt: new Date().toISOString()
+            };
+        });
+
+        // Salvar a nova ordem
+        GM_setValue('gedFavorites', updatedFavorites);
     }
 
     // Função para adicionar página atual aos favoritos
