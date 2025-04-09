@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Barra de favoritos do GED
 // @namespace    http://tampermonkey.net/
-// @version      1.4
+// @version      1.4.1
 // @description  Adiciona uma barra de favoritos flutuante ao sistema GED
 // @author        Jhonatan Aquino
 // @match         https://*.sigeduca.seduc.mt.gov.br/ged/*
@@ -21,9 +21,10 @@
         return; // Não executa o script se estiver em um iframe
     }
 
-    // Verificar se a página tem o atributo data-page="tela-documento"
-    if (document.documentElement.getAttribute('data-page') === 'tela-documento') {
-        return; // Não executa o script se for a tela de documento
+        // Verificar se a página tem o atributo data-page="tela-documento" ou se é um popup de mensagem
+    if (document.documentElement.getAttribute('data-page') === 'tela-documento' ||
+        document.title === 'Popup de Mensagem') {
+        return; // Não executa o script se for a tela de documento ou popup de mensagem
     }
 
     // Array de cores disponíveis - cores modernas e vibrantes com bom contraste
