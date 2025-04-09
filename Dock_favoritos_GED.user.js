@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GED Favorites Dock
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.3
 // @description  Adiciona uma barra de favoritos flutuante ao sistema GED
 // @author        Jhonatan Aquino
 // @match         https://*.sigeduca.seduc.mt.gov.br/ged/*
@@ -92,10 +92,10 @@
             top: 50%;
             transform: translateY(-50%);
             width: 240px;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(220, 220, 220, 0.6);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(0, 0, 0, 0.04);
             border-radius: 25px !important;
             padding: 8px 11px;
             box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.1);
@@ -106,14 +106,14 @@
         #ged-favorites-dock::before {
             content: '';
             position: absolute;
-            top: 0;
+            bottom: 0;
             left: 0;
             right: 0;
             height: 1px;
             background: linear-gradient(
                 90deg,
                 transparent,
-                rgba(255, 255, 255, 0.3),
+                rgba(190, 190, 190, 0.5),
                 transparent
             );
         }
@@ -126,7 +126,7 @@
             width: 20px;
             height: 20px;
             transform: translateY(-50%);
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.8)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.4)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E");
             background-size: contain;
             background-repeat: no-repeat;
             transition: opacity 0.3s ease;
@@ -149,7 +149,7 @@
             padding: 8px 12px 8px 10px;
             margin: 5px 0;
             text-decoration: none;
-            color: #fff;
+            color: #666;
             border-radius: 20px;
             transition: all 0.2s ease;
             position: relative;
@@ -180,11 +180,11 @@
 
         @keyframes highlightItem {
             0% {
-                background-color: rgba(255, 255, 255, 0.2);
+                background-color: rgba(0, 0, 0, 0.2);
                 transform: scale(1.05);
             }
             50% {
-                background-color: rgba(255, 255, 255, 0.1);
+                background-color: rgba(0, 0, 0, 0.1);
                 transform: scale(1.02);
             }
             100% {
@@ -194,7 +194,7 @@
         }
 
         .dock-item:hover {
-            background-color: rgba(255, 255, 255, 0.1) !important;
+            background-color: rgba(0, 0, 0, 0.1);
         }
 
         .dock-item.dragging {
@@ -239,7 +239,7 @@
         }
 
         #add-favorite-btn {
-            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border: 2px dashed rgba(0, 0, 0, 0.2);
             cursor: pointer;
             text-align:center;
         }
@@ -257,7 +257,7 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
+            border-radius: 20px;
             padding: 8px 12px;
             display: flex;
             align-items: center;
@@ -290,7 +290,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(170, 170, 170, 0.4);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             z-index: 10000;
@@ -299,7 +299,7 @@
             transition: all 1s ease;
             transform-origin: center;
             animation: captureEffect 1s ease forwards;
-            border: solid 1px rgba(0,0,0,0.5)
+            border: solid 1px rgba(0,0,0,0.2)
         }
 
         @keyframes captureEffect {
