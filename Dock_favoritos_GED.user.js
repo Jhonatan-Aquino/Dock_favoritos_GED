@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GED Favorites Dock
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  Adiciona uma barra de favoritos flutuante ao sistema GED
 // @author        Jhonatan Aquino
 // @match         https://*.sigeduca.seduc.mt.gov.br/ged/*
