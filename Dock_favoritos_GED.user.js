@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         GED Favorites Dock
+// @name         Barra de favoritos do GED
 // @namespace    http://tampermonkey.net/
-// @version      1.3
+// @version      1.4
 // @description  Adiciona uma barra de favoritos flutuante ao sistema GED
 // @author        Jhonatan Aquino
 // @match         https://*.sigeduca.seduc.mt.gov.br/ged/*
@@ -296,9 +296,9 @@
             z-index: 10000;
             pointer-events: none;
             opacity: 0;
-            transition: all 1s ease;
+            transition: all 0.8s ease;
             transform-origin: center;
-            animation: captureEffect 1s ease forwards;
+            animation: captureEffect 0.8s ease forwards;
             border: solid 1px rgba(0,0,0,0.2)
         }
 
@@ -324,8 +324,8 @@
             }
             100% {
                 opacity: 0.2;
-                width: 10vw;
-                height: 1.5vh;
+                width: 240px;
+                height: 30px;
                 border-radius: 500px;
             }
         }
@@ -386,7 +386,7 @@
             const isNewItem = !lastFavorites.some(lastFav => lastFav.url === fav.url);
             if (isNewItem) {
                 const item = createFavoriteItem(fav);
-                
+
                 // Criar e adicionar o efeito de captura
                 const screenCapture = document.createElement('div');
                 screenCapture.id = 'screen-capture';
@@ -396,7 +396,7 @@
                 const addBtnRect = addBtn.getBoundingClientRect();
                 setTimeout(() => {
                     screenCapture.style.left = `${addBtnRect.left}px`;
-                    screenCapture.style.top = `${addBtnRect.top + addBtnRect.height/2+60}px`;
+                    screenCapture.style.top = `${addBtnRect.top + addBtnRect.height/2+30}px`;
                 }, 300);
 
                 // Remover o elemento de captura após a animação
@@ -514,7 +514,46 @@
 
         // Verificar se já existe nos favoritos
         if (favorites.some(fav => fav.url === currentUrl)) {
-            alert('Esta página já está nos favoritos!');
+            // Adiciona o CSS da animação se ainda não existir
+            if (!document.querySelector('#wiggle-animation')) {
+                const style = document.createElement('style');
+                style.id = 'wiggle-animation';
+                style.textContent = `
+                    @keyframes wiggle {
+                        0% { transform: translateX(0); }
+                        16.67% { transform: translateX(-8px); }
+                        33.33% { transform: translateX(8px); }
+                        50% { transform: translateX(-6px); }
+                        66.67% { transform: translateX(6px); }
+                        83.33% { transform: translateX(-4px); }
+                        100% { transform: translateX(0); }
+                    }
+                    .wiggle {
+                        animation: wiggle 0.4s ease-in-out;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            // Aguarda um momento para o DOM atualizar
+            setTimeout(() => {
+                // Encontra o item no dock que corresponde à URL atual
+                const existingItem = document.querySelector(`#ged-favorites-dock .dock-item[href="${currentUrl}"]`);
+
+                if (existingItem) {
+                    // Remove classes existentes e adiciona animação
+                    existingItem.classList.remove('new-item', 'highlight');
+                    existingItem.classList.add('wiggle');
+
+                    // Remove a classe após a animação terminar
+                    setTimeout(() => {
+                        existingItem.classList.remove('wiggle');
+                    }, 1000);
+                }else{
+                    alert('Não foi possível adicionar a página aos favoritos. Por favor, tente novamente.');
+                }
+            }, 100);
+
             return;
         }
 
