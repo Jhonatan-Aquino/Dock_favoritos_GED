@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Barra de favoritos do GED
 // @namespace    http://tampermonkey.net/
-// @version      1.4.3
+// @version      1.4.4
 // @description  Adiciona uma barra de favoritos flutuante ao sistema GED
 // @author        Jhonatan Aquino
 // @match         https://*.sigeduca.seduc.mt.gov.br/ged/*
@@ -605,4 +605,210 @@
     } else {
         createFavoritesDock();
     }
+
+// Exemplo de uso:
+adicionarEfeitoBrilhoFlexivel('#ged-favorites-dock', {
+    delay: 1000,
+    duration: 2000,
+    colors: {
+        before: [
+            'rgba(235, 20, 20, 0.3)',
+            'transparent',
+            'rgba(64, 255, 166, 0.3)',
+            'rgba(214, 114, 114, 0.5)',
+            'rgba(255, 40, 40, 0.6)'
+        ],
+        after: [
+            'rgba(57, 130, 247, 0.5)',
+            'rgba(52, 165, 104, 0.7)',
+            'rgba(255, 255, 255, 0.91)',
+            'rgba(57, 130, 247, 0.5)'
+        ]
+    },
+    blur: {
+        before: 20,
+        after: 20
+    }
+});
+
+function adicionarEfeitoBrilhoFlexivel(containerSelector, options = {}) {
+    // Verifica se o efeito já foi executado
+    const efeitoExecutado = GM_getValue('efeitoBrilhoExecutado', false);
+    if (efeitoExecutado) {
+        return; // Se já foi executado, retorna sem fazer nada
+    }
+
+    // Configurações padrão
+    const config = {
+        delay: options.delay || 1000,
+        duration: options.duration || 2000,
+        colors: {
+            before: options.colors?.before || [
+                'rgba(235, 20, 20, 0.3)',
+                'rgba(64, 255, 166, 0.3)',
+                'transparent',
+                'rgba(255, 40, 40, 0.6)'
+            ],
+            after: options.colors?.after || [
+                'rgba(57, 130, 247, 0.5)',
+                'rgba(52, 165, 104, 0.7)',
+                'rgba(57, 130, 247, 0.5)'
+            ]
+        },
+        blur: {
+            before: options.blur?.before || 30,
+            after: options.blur?.after || 50
+        }
+    };
+
+    // Obtém o container
+    const container = document.querySelector(containerSelector);
+    if (!container) return;
+
+    // Cria os elementos de brilho
+    const glowBefore = document.createElement('div');
+    const glowAfter = document.createElement('div');
+
+    // Configura os elementos de brilho
+    glowBefore.className = 'glow-layer before';
+    glowAfter.className = 'glow-layer after';
+
+    // Adiciona os estilos necessários
+    const styleId = 'glow-effect-flexible-styles';
+    if (!document.getElementById(styleId)) {
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.type = 'text/css';
+        style.innerHTML = `
+            .glow-layer {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                pointer-events: none;
+                z-index: -1;
+                border-radius: inherit;
+                opacity: 0;
+            }
+
+            .glow-layer.before {
+                animation: glow-reverse-flexible ${config.duration}ms linear;
+            }
+
+            .glow-layer.after {
+                animation: glow-flexible ${config.duration}ms linear;
+            }
+
+            @keyframes glow-flexible {
+                0% {
+                    opacity: 0;
+                    transform: scale(1);
+                    background-position: 0% 0%;
+                    background-size: 100% 100%;
+                }
+                5% {
+                    opacity: 1;
+                    transform: scale(1.1);
+                    background-position: 100% 0%;
+                    background-size: 150% 150%;
+                }
+                15% {
+                    opacity: 0.8;
+                    transform: scale(1.05);
+                    background-position: 50% 100%;
+                    background-size: 180% 180%;
+                }
+                35% {
+                    opacity: 0.9;
+                    transform: scale(1.03);
+                    background-position: 25% 75%;
+                    background-size: 200% 200%;
+                }
+                65% {
+                    opacity: 0.7;
+                    transform: scale(1.04);
+                    background-position: 85% 15%;
+                    background-size: 220% 220%;
+                }
+                85% {
+                    opacity: 0.5;
+                    transform: scale(1.02);
+                    background-position: 35% 65%;
+                    background-size: 180% 180%;
+                }
+                100% {
+                    opacity: 0;
+                    transform: scale(1);
+                    background-position: 0% 0%;
+                    background-size: 100% 100%;
+                }
+            }
+
+            @keyframes glow-reverse-flexible {
+                0% {
+                    opacity: 0;
+                    transform: scale(1);
+                    background-position: 0% 0%;
+                    background-size: 100% 100%;
+                }
+                5% {
+                    opacity: 0.9;
+                    transform: scale(1.08);
+                    background-position: 0% 100%;
+                    background-size: 160% 160%;
+                }
+                20% {
+                    opacity: 1;
+                    transform: scale(1.06);
+                    background-position: 100% 50%;
+                    background-size: 190% 190%;
+                }
+                45% {
+                    opacity: 0.8;
+                    transform: scale(1.04);
+                    background-position: 75% 25%;
+                    background-size: 220% 220%;
+                }
+                75% {
+                    opacity: 0.6;
+                    transform: scale(1.03);
+                    background-position: 15% 85%;
+                    background-size: 250% 250%;
+                }
+                90% {
+                    opacity: 0.3;
+                    transform: scale(1.01);
+                    background-position: 65% 35%;
+                    background-size: 280% 280%;
+                }
+                100% {
+                    opacity: 0;
+                    transform: scale(1);
+                    background-position: 200% 200%;
+                    background-size: 300% 300%;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Configura os estilos específicos para este container
+    glowBefore.style.background = `conic-gradient(from 0deg, ${config.colors.before.join(',')})`;
+    glowBefore.style.filter = `blur(${config.blur.before}px)`;
+    glowAfter.style.background = `conic-gradient(from 0deg, ${config.colors.after.join(',')})`;
+    glowAfter.style.filter = `blur(${config.blur.after}px)`;
+
+    // Adiciona os elementos de brilho ao container
+    container.appendChild(glowBefore);
+    container.appendChild(glowAfter);
+
+    // Após a animação terminar, marca o efeito como executado
+    setTimeout(() => {
+        glowBefore.remove();
+        glowAfter.remove();
+        GM_setValue('efeitoBrilhoExecutado', true);
+    }, config.duration);
+}
+    
 })();
