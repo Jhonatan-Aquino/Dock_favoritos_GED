@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Barra de favoritos do GED
 // @namespace    http://tampermonkey.net/
-// @version      1.4.9.1
+// @version      1.5
 // @description  Adiciona uma barra de favoritos flutuante ao sistema GED
 // @author        Jhonatan Aquino
 // @match         https://*.sigeduca.seduc.mt.gov.br/ged/*
@@ -103,6 +103,28 @@
             box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.1);
             transition: left 0.3s ease;
             z-index: 9999;
+        }
+
+        .separador {
+            height: 3px;
+            background: rgba(0,0,0,0.2);
+            margin: 10px 0;
+            cursor: move;
+            position: relative;
+            opacity: 0.5;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+            width: 40%;
+            margin: 1px auto;
+        }
+
+        .separador:hover {
+            opacity: 1;
+        }
+
+        .separador.dragging {
+            opacity: 0.8;
+            transition: none !important;
         }
 
         #ged-favorites-dock::before {
@@ -225,7 +247,7 @@
             display: inline-block;
         }
 
-         .remove-favorite {
+        .remove-favorite {
             opacity: 0;
             position: absolute;
             right: 8px;
@@ -387,13 +409,12 @@
 
     // Função para carregar favoritos salvos
     function carregarFavoritos() {
-        // Garante que todos os favoritos tenham um índice de ordem
         const favoritos = garantirOrdemFavoritos();
         const barra = document.getElementById('ged-favorites-dock');
         const ultimosFavoritos = GM_getValue('lastFavorites', []);
         const botaoAdicionar = barra.querySelector('#add-favorite-btn');
 
-        // Remover itens antigos (exceto o botão adicionar)
+        // Remover itens antigos (exceto o botão adicionar e separadores)
         Array.from(barra.children).forEach(filho => {
             if (filho.id !== 'add-favorite-btn') {
                 filho.remove();
@@ -404,38 +425,69 @@
         const favoritosOrdenados = [...favoritos].sort((a, b) => a.order - b.order);
 
         // Adicionar cada favorito à barra na ordem exata como foi salva
-        favoritosOrdenados.forEach(favorito => {
-            const ehNovoItem = !ultimosFavoritos.some(ultimoFav => ultimoFav.url === favorito.url);
-            const item = criarItemFavorito(favorito);
-
-            if (ehNovoItem) {
-                // Criar e adicionar o efeito de captura
-                const capturaTela = document.createElement('div');
-                capturaTela.id = 'screen-capture';
-                document.body.appendChild(capturaTela);
-
-                // Posicionar o elemento de captura no local do novo item
-                const botaoAdicionarRect = botaoAdicionar.getBoundingClientRect();
-                setTimeout(() => {
-                    capturaTela.style.left = `${botaoAdicionarRect.left}px`;
-                    capturaTela.style.top = `${botaoAdicionarRect.top + botaoAdicionarRect.height/2+30}px`;
-                }, 300);
-
-                // Remover o elemento de captura após a animação
-                capturaTela.addEventListener('animationend', () => {
-                    capturaTela.remove();
-                });
-
-                // Adicionar o novo item após um pequeno delay
-                setTimeout(() => {
-                    item.classList.add('new-item', 'highlight');
-                    barra.insertBefore(item, botaoAdicionar.nextSibling);
-                }, 900);
+        favoritosOrdenados.forEach((favorito, index) => {
+            if (favorito.tipo === 'separador') {
+                // Se for o último item e for um separador, não adiciona
+                if (index === favoritosOrdenados.length - 1) {
+                    return;
+                }else{
+                const separador = document.createElement('div');
+                separador.className = 'separador';
+                separador.draggable = true;
+                separador.addEventListener('dragstart', iniciarArrastoSeparador);
+                separador.addEventListener('dragend', finalizarArrastoSeparador);
+                barra.appendChild(separador);
+            }
             } else {
-                item.style.opacity = '1';
-                barra.appendChild(item);
+                const ehNovoItem = !ultimosFavoritos.some(ultimoFav => ultimoFav.url === favorito.url);
+                const item = criarItemFavorito(favorito);
+
+                if (ehNovoItem) {
+                    // Criar e adicionar o efeito de captura
+                    const capturaTela = document.createElement('div');
+                    capturaTela.id = 'screen-capture';
+                    document.body.appendChild(capturaTela);
+
+                    // Posicionar o elemento de captura no local do novo item
+                    const botaoAdicionarRect = botaoAdicionar.getBoundingClientRect();
+                    setTimeout(() => {
+                        capturaTela.style.left = `${botaoAdicionarRect.left}px`;
+                        capturaTela.style.top = `${botaoAdicionarRect.top + botaoAdicionarRect.height/2+30}px`;
+                    }, 300);
+
+                    // Remover o elemento de captura após a animação
+                    capturaTela.addEventListener('animationend', () => {
+                        capturaTela.remove();
+                    });
+
+                    // Adicionar o novo item após um pequeno delay
+                    setTimeout(() => {
+                        item.classList.add('new-item', 'highlight');
+                        barra.insertBefore(item, botaoAdicionar.nextSibling);
+                    }, 900);
+                } else {
+                    item.style.opacity = '1';
+                    barra.appendChild(item);
+                }
             }
         });
+
+        // Remover separadores vizinhos após carregar todos os itens
+        const separadores = [...barra.querySelectorAll('.separador')];
+        for (let i = separadores.length - 1; i > 0; i--) {
+            if (separadores[i].previousElementSibling?.classList.contains('separador')) {
+                separadores[i].remove();
+            }
+        }
+
+        // Adicionar separador original no final
+        const separadorOriginal = document.createElement('div');
+        separadorOriginal.className = 'separador';
+        separadorOriginal.classList.add('separador-original');
+        separadorOriginal.draggable = true;
+        separadorOriginal.addEventListener('dragstart', iniciarArrastoSeparador);
+        separadorOriginal.addEventListener('dragend', finalizarArrastoSeparador);
+        barra.appendChild(separadorOriginal);
 
         // Salvar o estado atual para comparação futura
         GM_setValue('lastFavorites', favoritosOrdenados);
@@ -500,7 +552,7 @@
         e.preventDefault();
         const itemArrastando = document.querySelector('.dragging');
         const barra = document.getElementById('ged-favorites-dock');
-        const itensIrmaos = [...barra.querySelectorAll('.dock-item:not(.dragging)')];
+        const itensIrmaos = [...barra.querySelectorAll('.dock-item:not(.dragging), .separador:not(.dragging)')];
 
         const proximoIrmao = itensIrmaos.find(irmao => {
             const box = irmao.getBoundingClientRect();
@@ -523,7 +575,16 @@
     // Função para atualizar a ordem dos favoritos
     function atualizarOrdemFavoritos() {
         const barra = document.getElementById('ged-favorites-dock');
-        const itens = [...barra.querySelectorAll('.dock-item:not(#add-favorite-btn)')];
+        const itens = [...barra.querySelectorAll('.dock-item:not(#add-favorite-btn), .separador')];
+
+        // Remover separadores vizinhos
+        for (let i = itens.length - 1; i > 0; i--) {
+            if (itens[i].classList.contains('separador') &&
+                itens[i-1].classList.contains('separador')) {
+                itens[i].remove();
+                itens.splice(i, 1);
+            }
+        }
 
         // Obter todos os favoritos atuais
         const favoritosAtuais = GM_getValue('gedFavorites', []);
@@ -533,25 +594,30 @@
 
         // Criar nova lista de favoritos mantendo todas as propriedades originais
         const favoritosAtualizados = itens.map((item, index) => {
-            const url = item.href;
-            const favoritoExistente = mapaFavoritos.get(url);
-
-            // Se o favorito existir, manter todas as suas propriedades
-            if (favoritoExistente) {
+            if (item.classList.contains('separador')) {
                 return {
-                    ...favoritoExistente, // Mantém todas as propriedades originais
-                    title: item.querySelector('span').textContent, // Atualiza apenas o título se mudou
-                    order: index // Adiciona o índice de ordem
+                    tipo: 'separador',
+                    order: index
                 };
             }
 
-            // Se por algum motivo o favorito não existir, criar um novo
+            const url = item.href;
+            const favoritoExistente = mapaFavoritos.get(url);
+
+            if (favoritoExistente) {
+                return {
+                    ...favoritoExistente,
+                    title: item.querySelector('span').textContent,
+                    order: index
+                };
+            }
+
             return {
                 url: url,
                 title: item.querySelector('span').textContent,
                 color: item.querySelector('.color-indicator').style.backgroundColor,
                 addedAt: new Date().toISOString(),
-                order: index // Adiciona o índice de ordem
+                order: index
             };
         });
 
@@ -636,10 +702,44 @@
     function removerFavorito(url) {
         const favoritos = GM_getValue('gedFavorites', []);
         const favoritosAtualizados = favoritos.filter(fav => fav.url !== url);
-        GM_setValue('gedFavorites', favoritosAtualizados);
+
+        // Reordenar os favoritos após a remoção
+        const favoritosReordenados = favoritosAtualizados.map((fav, index) => ({
+            ...fav,
+            order: index
+        }));
+
+        GM_setValue('gedFavorites', favoritosReordenados);
 
         // Recarregar a barra
         carregarFavoritos();
+        atualizarOrdemFavoritos();
+
+    }
+
+    // Funções para manipular o separador
+    function iniciarArrastoSeparador(e) {
+        e.target.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', 'separador');
+
+        // Se o separador sendo arrastado é o original (está no final da barra)
+        const barra = document.getElementById('ged-favorites-dock');
+        if (e.target === barra.lastElementChild) {
+            // Criar uma cópia do separador
+            const copiaSeparador = document.createElement('div');
+            copiaSeparador.className = 'separador';
+            copiaSeparador.draggable = true;
+            copiaSeparador.addEventListener('dragstart', iniciarArrastoSeparador);
+            copiaSeparador.addEventListener('dragend', finalizarArrastoSeparador);
+
+            // Inserir a cópia logo após o separador original
+            barra.insertBefore(copiaSeparador, e.target.nextSibling);
+        }
+    }
+
+    function finalizarArrastoSeparador(e) {
+        e.target.classList.remove('dragging');
+        atualizarOrdemFavoritos();
     }
 
     // Inicializar a barra de favoritos quando o documento estiver pronto
