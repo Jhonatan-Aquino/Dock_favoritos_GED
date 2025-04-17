@@ -225,7 +225,7 @@
             display: inline-block;
         }
 
-        .remove-favorite {
+         .remove-favorite {
             opacity: 0;
             position: absolute;
             right: 8px;
@@ -234,8 +234,12 @@
             font-size: 18px;
             transition: opacity 0.2s;
             top: 50%;
-            transform: translateY(-50%);
+            transform: translateY(-50%) scale(1);
             padding: 5px;
+            transition: transform 0.2s;
+        }
+        .remove-favorite:hover {
+            transform:  translateY(-50%) scale(1.4);
         }
 
         .dock-item:hover .remove-favorite {
