@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Barra de favoritos do GED
 // @namespace    http://tampermonkey.net/
-// @version      1.5.1
+// @version      1.5.2
 // @description  Adiciona uma barra de favoritos flutuante ao sistema GED
 // @author        Jhonatan Aquino
 // @match         https://*.sigeduca.seduc.mt.gov.br/ged/*
@@ -420,9 +420,9 @@
     // Função para carregar favoritos salvos
     function carregarFavoritos() {
         const favoritos = garantirOrdemFavoritos();
-        const barra = document.getElementById('ged-favorites-dock');
+        let barra = document.getElementById('ged-favorites-dock');
         const ultimosFavoritos = GM_getValue('lastFavorites', []);
-        const botaoAdicionar = barra.querySelector('#add-favorite-btn');
+        let botaoAdicionar = barra.querySelector('#add-favorite-btn');
 
         // Remover itens antigos (exceto o botão adicionar e separadores)
         Array.from(barra.children).forEach(filho => {
@@ -459,11 +459,16 @@
                     document.body.appendChild(capturaTela);
 
                     // Posicionar o elemento de captura no local do novo item
-                    let botaoAdicionarRect = botaoAdicionar.getBoundingClientRect();
-                    let barraRect = barra.getBoundingClientRect();
+                    botaoAdicionar = barra.querySelector('#add-favorite-btn');
+                    barra = document.getElementById('ged-favorites-dock');
+                    
                     setTimeout(() => {
-                        capturaTela.style.left = `${botaoAdicionarRect.left}px`;
-                        capturaTela.style.top = `${barraRect.top-barraRect.height/2+60}px`;
+                        let itemRect = item.getBoundingClientRect();
+                        let posicaoX = itemRect.left || botaoAdicionar.getBoundingClientRect().left;
+                        let posicaoY = barra.getBoundingClientRect().top;
+                        
+                        capturaTela.style.left = `${posicaoX}px`;
+                        capturaTela.style.top = `${posicaoY+40}px`;
                     }, 500);
 
                     // Remover o elemento de captura após a animação
