@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Barra de favoritos do GED
 // @namespace    http://tampermonkey.net/
-// @version      1.5
+// @version      1.5.1
 // @description  Adiciona uma barra de favoritos flutuante ao sistema GED
 // @author        Jhonatan Aquino
 // @match         https://*.sigeduca.seduc.mt.gov.br/ged/*
@@ -329,7 +329,7 @@
             opacity: 0;
             transition: all 0.8s ease;
             transform-origin: center;
-            animation: captureEffect 0.8s ease forwards;
+            animation: captureEffect 1s ease forwards;
             border: solid 1px rgba(0,0,0,0.2)
         }
 
@@ -346,8 +346,18 @@
             }
             20% {
                 opacity: 0.8;
-                width: 90vw;
-                height: 90vh;
+                top:2.5vw;
+                left:2.5vw;
+                width: 95vw;
+                height: 95vh;
+                border-radius: 0px;
+            }
+            30% {
+                opacity: 0.8;
+                top:2.5vw;
+                left:2.5vw;
+                width: 95vw;
+                height: 95vh;
                 border-radius: 0px;
             }
             90% {
@@ -365,22 +375,22 @@
     // Função para garantir que todos os favoritos tenham um índice de ordem
     function garantirOrdemFavoritos() {
         const favoritos = GM_getValue('gedFavorites', []);
-
+        
         // Verifica se algum favorito não tem a propriedade 'order'
         const precisaAtualizarOrdem = favoritos.some(fav => fav.order === undefined);
-
+        
         if (precisaAtualizarOrdem) {
             // Adiciona a propriedade 'order' para cada favorito
             const favoritosAtualizados = favoritos.map((fav, index) => ({
                 ...fav,
                 order: index
             }));
-
+            
             // Salva a lista atualizada
             GM_setValue('gedFavorites', favoritosAtualizados);
             return favoritosAtualizados;
         }
-
+        
         return favoritos;
     }
 
@@ -449,11 +459,12 @@
                     document.body.appendChild(capturaTela);
 
                     // Posicionar o elemento de captura no local do novo item
-                    const botaoAdicionarRect = botaoAdicionar.getBoundingClientRect();
+                    let botaoAdicionarRect = botaoAdicionar.getBoundingClientRect();
+                    let barraRect = barra.getBoundingClientRect();
                     setTimeout(() => {
                         capturaTela.style.left = `${botaoAdicionarRect.left}px`;
-                        capturaTela.style.top = `${botaoAdicionarRect.top + botaoAdicionarRect.height/2+30}px`;
-                    }, 300);
+                        capturaTela.style.top = `${barraRect.top-barraRect.height/2+60}px`;
+                    }, 500);
 
                     // Remover o elemento de captura após a animação
                     capturaTela.addEventListener('animationend', () => {
@@ -579,7 +590,7 @@
 
         // Remover separadores vizinhos
         for (let i = itens.length - 1; i > 0; i--) {
-            if (itens[i].classList.contains('separador') &&
+            if (itens[i].classList.contains('separador') && 
                 itens[i-1].classList.contains('separador')) {
                 itens[i].remove();
                 itens.splice(i, 1);
@@ -702,19 +713,19 @@
     function removerFavorito(url) {
         const favoritos = GM_getValue('gedFavorites', []);
         const favoritosAtualizados = favoritos.filter(fav => fav.url !== url);
-
+        
         // Reordenar os favoritos após a remoção
         const favoritosReordenados = favoritosAtualizados.map((fav, index) => ({
             ...fav,
             order: index
         }));
-
+        
         GM_setValue('gedFavorites', favoritosReordenados);
 
         // Recarregar a barra
         carregarFavoritos();
         atualizarOrdemFavoritos();
-
+        
     }
 
     // Funções para manipular o separador
@@ -731,7 +742,7 @@
             copiaSeparador.draggable = true;
             copiaSeparador.addEventListener('dragstart', iniciarArrastoSeparador);
             copiaSeparador.addEventListener('dragend', finalizarArrastoSeparador);
-
+            
             // Inserir a cópia logo após o separador original
             barra.insertBefore(copiaSeparador, e.target.nextSibling);
         }
