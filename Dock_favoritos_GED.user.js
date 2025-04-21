@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Barra de favoritos do GED
 // @namespace    http://tampermonkey.net/
-// @version      1.5.2
+// @version      1.5.3
 // @description  Adiciona uma barra de favoritos flutuante ao sistema GED
 // @author        Jhonatan Aquino
 // @match         https://*.sigeduca.seduc.mt.gov.br/ged/*
@@ -375,22 +375,22 @@
     // Função para garantir que todos os favoritos tenham um índice de ordem
     function garantirOrdemFavoritos() {
         const favoritos = GM_getValue('gedFavorites', []);
-        
+
         // Verifica se algum favorito não tem a propriedade 'order'
         const precisaAtualizarOrdem = favoritos.some(fav => fav.order === undefined);
-        
+
         if (precisaAtualizarOrdem) {
             // Adiciona a propriedade 'order' para cada favorito
             const favoritosAtualizados = favoritos.map((fav, index) => ({
                 ...fav,
                 order: index
             }));
-            
+
             // Salva a lista atualizada
             GM_setValue('gedFavorites', favoritosAtualizados);
             return favoritosAtualizados;
         }
-        
+
         return favoritos;
     }
 
@@ -420,9 +420,9 @@
     // Função para carregar favoritos salvos
     function carregarFavoritos() {
         const favoritos = garantirOrdemFavoritos();
-        let barra = document.getElementById('ged-favorites-dock');
+        const barra = document.getElementById('ged-favorites-dock');
         const ultimosFavoritos = GM_getValue('lastFavorites', []);
-        let botaoAdicionar = barra.querySelector('#add-favorite-btn');
+        const botaoAdicionar = barra.querySelector('#add-favorite-btn');
 
         // Remover itens antigos (exceto o botão adicionar e separadores)
         Array.from(barra.children).forEach(filho => {
@@ -459,16 +459,11 @@
                     document.body.appendChild(capturaTela);
 
                     // Posicionar o elemento de captura no local do novo item
-                    botaoAdicionar = barra.querySelector('#add-favorite-btn');
-                    barra = document.getElementById('ged-favorites-dock');
-                    
+                    let botaoAdicionarRect = botaoAdicionar.getBoundingClientRect();
+                    let barraRect = barra.getBoundingClientRect();
                     setTimeout(() => {
-                        let itemRect = item.getBoundingClientRect();
-                        let posicaoX = itemRect.left || botaoAdicionar.getBoundingClientRect().left;
-                        let posicaoY = barra.getBoundingClientRect().top;
-                        
-                        capturaTela.style.left = `${posicaoX}px`;
-                        capturaTela.style.top = `${posicaoY+40}px`;
+                        capturaTela.style.left = `${botaoAdicionarRect.left}px`;
+                        capturaTela.style.top = `${barraRect.top-barraRect.height/2+60}px`;
                     }, 500);
 
                     // Remover o elemento de captura após a animação
@@ -595,7 +590,7 @@
 
         // Remover separadores vizinhos
         for (let i = itens.length - 1; i > 0; i--) {
-            if (itens[i].classList.contains('separador') && 
+            if (itens[i].classList.contains('separador') &&
                 itens[i-1].classList.contains('separador')) {
                 itens[i].remove();
                 itens.splice(i, 1);
@@ -718,19 +713,19 @@
     function removerFavorito(url) {
         const favoritos = GM_getValue('gedFavorites', []);
         const favoritosAtualizados = favoritos.filter(fav => fav.url !== url);
-        
+
         // Reordenar os favoritos após a remoção
         const favoritosReordenados = favoritosAtualizados.map((fav, index) => ({
             ...fav,
             order: index
         }));
-        
+
         GM_setValue('gedFavorites', favoritosReordenados);
 
         // Recarregar a barra
         carregarFavoritos();
         atualizarOrdemFavoritos();
-        
+
     }
 
     // Funções para manipular o separador
@@ -747,7 +742,7 @@
             copiaSeparador.draggable = true;
             copiaSeparador.addEventListener('dragstart', iniciarArrastoSeparador);
             copiaSeparador.addEventListener('dragend', finalizarArrastoSeparador);
-            
+
             // Inserir a cópia logo após o separador original
             barra.insertBefore(copiaSeparador, e.target.nextSibling);
         }
@@ -790,184 +785,226 @@ adicionarEfeitoBrilhoFlexivel('#ged-favorites-dock', {
     }
 });
 
+
 function adicionarEfeitoBrilhoFlexivel(containerSelector, options = {}) {
-    // Verifica se o efeito já foi executado
-    const efeitoExecutado = GM_getValue('efeitoBrilhoExecutado', false);
-    if (efeitoExecutado) {
-        return; // Se já foi executado, retorna sem fazer nada
-    }
+    // Obtém a versão atual do script
+    const versaoAtual = GM_info.script.version;
 
-    // Configurações padrão
-    const config = {
-        delay: options.delay || 1000,
-        duration: options.duration || 2000,
-        colors: {
-            before: options.colors?.before || [
-                'rgba(235, 20, 20, 0.3)',
-                'rgba(64, 255, 166, 0.3)',
-                'transparent',
-                'rgba(255, 40, 40, 0.6)'
-            ],
-            after: options.colors?.after || [
-                'rgba(57, 130, 247, 0.5)',
-                'rgba(52, 165, 104, 0.7)',
-                'rgba(57, 130, 247, 0.5)'
-            ]
-        },
-        blur: {
-            before: options.blur?.before || 30,
-            after: options.blur?.after || 50
+    // Obtém a última versão em que o efeito foi executado
+    const ultimaVersaoExecutada = GM_getValue('ultimaVersaoEfeitoBrilho', '0.0');
+
+    // Se a versão atual for diferente da última versão executada, executa o efeito
+    if (versaoAtual !== ultimaVersaoExecutada) {
+        // Configurações padrão
+        const config = {
+            delay: options.delay || 1000,
+            duration: options.duration || 2000,
+            colors: {
+                before: options.colors?.before || [
+                    'rgba(235, 20, 20, 0.3)',
+                    'rgba(64, 255, 166, 0.3)',
+                    'transparent',
+                    'rgba(255, 40, 40, 0.6)'
+                ],
+                after: options.colors?.after || [
+                    'rgba(57, 130, 247, 0.5)',
+                    'rgba(52, 165, 104, 0.7)',
+                    'rgba(57, 130, 247, 0.5)'
+                ]
+            },
+            blur: {
+                before: options.blur?.before || 30,
+                after: options.blur?.after || 50
+            }
+        };
+
+        // Obtém o container
+        const container = document.querySelector(containerSelector);
+        if (!container) return;
+
+        // Obtém o botão se o ID foi fornecido
+        const botao = options.botaoId ? document.getElementById(options.botaoId) : null;
+        let backgroundOriginal = null;
+
+        if (botao) {
+            // Salva o background original do botão
+            backgroundOriginal = botao.style.background;
         }
-    };
 
-    // Obtém o container
-    const container = document.querySelector(containerSelector);
-    if (!container) return;
+        // Cria os elementos de brilho
+        const glowBefore = document.createElement('div');
+        const glowAfter = document.createElement('div');
 
-    // Cria os elementos de brilho
-    const glowBefore = document.createElement('div');
-    const glowAfter = document.createElement('div');
+        // Configura os elementos de brilho
+        glowBefore.className = 'glow-layer before';
+        glowAfter.className = 'glow-layer after';
 
-    // Configura os elementos de brilho
-    glowBefore.className = 'glow-layer before';
-    glowAfter.className = 'glow-layer after';
-
-    // Adiciona os estilos necessários
-    const styleId = 'glow-effect-flexible-styles';
-    if (!document.getElementById(styleId)) {
-        const style = document.createElement('style');
-        style.id = styleId;
-        style.type = 'text/css';
-        style.innerHTML = `
-            .glow-layer {
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                pointer-events: none;
-                z-index: -1;
-                border-radius: inherit;
-                opacity: 0;
-            }
-
-            .glow-layer.before {
-                animation: glow-reverse-flexible ${config.duration}ms linear;
-            }
-
-            .glow-layer.after {
-                animation: glow-flexible ${config.duration}ms linear;
-            }
-
-            @keyframes glow-flexible {
-                0% {
+        // Adiciona os estilos necessários
+        const styleId = 'glow-effect-flexible-styles';
+        if (!document.getElementById(styleId)) {
+            const style = document.createElement('style');
+            style.id = styleId;
+            style.type = 'text/css';
+            style.innerHTML = `
+                .glow-layer {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    pointer-events: none;
+                    z-index: -1;
+                    border-radius: inherit;
                     opacity: 0;
-                    transform: scale(1);
-                    background-position: 0% 0%;
-                    background-size: 100% 100%;
                 }
-                5% {
-                    opacity: 1;
-                    transform: scale(1.1);
-                    background-position: 100% 0%;
-                    background-size: 150% 150%;
-                }
-                15% {
-                    opacity: 0.8;
-                    transform: scale(1.05);
-                    background-position: 50% 100%;
-                    background-size: 180% 180%;
-                }
-                35% {
-                    opacity: 0.9;
-                    transform: scale(1.03);
-                    background-position: 25% 75%;
-                    background-size: 200% 200%;
-                }
-                65% {
-                    opacity: 0.7;
-                    transform: scale(1.04);
-                    background-position: 85% 15%;
-                    background-size: 220% 220%;
-                }
-                85% {
-                    opacity: 0.5;
-                    transform: scale(1.02);
-                    background-position: 35% 65%;
-                    background-size: 180% 180%;
-                }
-                100% {
-                    opacity: 0;
-                    transform: scale(1);
-                    background-position: 0% 0%;
-                    background-size: 100% 100%;
-                }
-            }
 
-            @keyframes glow-reverse-flexible {
-                0% {
-                    opacity: 0;
-                    transform: scale(1);
-                    background-position: 0% 0%;
-                    background-size: 100% 100%;
+                .glow-layer.before {
+                    animation: glow-reverse-flexible ${config.duration}ms linear;
                 }
-                5% {
-                    opacity: 0.9;
-                    transform: scale(1.08);
-                    background-position: 0% 100%;
-                    background-size: 160% 160%;
+
+                .glow-layer.after {
+                    animation: glow-flexible ${config.duration}ms linear;
                 }
-                20% {
-                    opacity: 1;
-                    transform: scale(1.06);
-                    background-position: 100% 50%;
-                    background-size: 190% 190%;
+
+                @keyframes glow-flexible {
+                    0% {
+                        opacity: 0;
+                        transform: scale(1);
+                        background-position: 0% 0%;
+                        background-size: 100% 100%;
+                    }
+                    5% {
+                        opacity: 1;
+                        transform: scale(1.1);
+                        background-position: 100% 0%;
+                        background-size: 150% 150%;
+                    }
+                    15% {
+                        opacity: 0.8;
+                        transform: scale(1.05);
+                        background-position: 50% 100%;
+                        background-size: 180% 180%;
+                    }
+                    35% {
+                        opacity: 0.9;
+                        transform: scale(1.03);
+                        background-position: 25% 75%;
+                        background-size: 200% 200%;
+                    }
+                    65% {
+                        opacity: 0.7;
+                        transform: scale(1.04);
+                        background-position: 85% 15%;
+                        background-size: 220% 220%;
+                    }
+                    85% {
+                        opacity: 0.5;
+                        transform: scale(1.02);
+                        background-position: 35% 65%;
+                        background-size: 180% 180%;
+                    }
+                    100% {
+                        opacity: 0;
+                        transform: scale(1);
+                        background-position: 0% 0%;
+                        background-size: 100% 100%;
+                    }
                 }
-                45% {
-                    opacity: 0.8;
-                    transform: scale(1.04);
-                    background-position: 75% 25%;
-                    background-size: 220% 220%;
+
+                @keyframes glow-reverse-flexible {
+                    0% {
+                        opacity: 0;
+                        transform: scale(1);
+                        background-position: 0% 0%;
+                        background-size: 100% 100%;
+                    }
+                    5% {
+                        opacity: 0.9;
+                        transform: scale(1.08);
+                        background-position: 0% 100%;
+                        background-size: 160% 160%;
+                    }
+                    20% {
+                        opacity: 1;
+                        transform: scale(1.06);
+                        background-position: 100% 50%;
+                        background-size: 190% 190%;
+                    }
+                    45% {
+                        opacity: 0.8;
+                        transform: scale(1.04);
+                        background-position: 75% 25%;
+                        background-size: 220% 220%;
+                    }
+                    75% {
+                        opacity: 0.6;
+                        transform: scale(1.03);
+                        background-position: 15% 85%;
+                        background-size: 250% 250%;
+                    }
+                    90% {
+                        opacity: 0.3;
+                        transform: scale(1.01);
+                        background-position: 65% 35%;
+                        background-size: 280% 280%;
+                    }
+                    100% {
+                        opacity: 0;
+                        transform: scale(1);
+                        background-position: 200% 200%;
+                        background-size: 300% 300%;
+                    }
                 }
-                75% {
-                    opacity: 0.6;
-                    transform: scale(1.03);
-                    background-position: 15% 85%;
-                    background-size: 250% 250%;
+
+                @keyframes botao-brilho {
+                    0% {
+                        background: ${backgroundOriginal || 'rgba(57, 130, 247, 0.5)'};
+                    }
+                    25% {
+                        background: rgba(52, 165, 104, 0.7);
+                    }
+                    50% {
+                        background: rgba(57, 130, 247, 0.9);
+                    }
+                    75% {
+                        background: rgba(52, 165, 104, 0.7);
+                    }
+                    100% {
+                        background: ${backgroundOriginal || 'rgba(57, 130, 247, 0.5)'};
+                    }
                 }
-                90% {
-                    opacity: 0.3;
-                    transform: scale(1.01);
-                    background-position: 65% 35%;
-                    background-size: 280% 280%;
-                }
-                100% {
-                    opacity: 0;
-                    transform: scale(1);
-                    background-position: 200% 200%;
-                    background-size: 300% 300%;
-                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Configura os estilos específicos para este container
+        glowBefore.style.background = `conic-gradient(from 0deg, ${config.colors.before.join(',')})`;
+        glowBefore.style.filter = `blur(${config.blur.before}px)`;
+        glowAfter.style.background = `conic-gradient(from 0deg, ${config.colors.after.join(',')})`;
+        glowAfter.style.filter = `blur(${config.blur.after}px)`;
+
+        // Adiciona os elementos de brilho ao container
+        setTimeout(() => {
+            container.appendChild(glowBefore);
+            container.appendChild(glowAfter);
+
+            // Se houver um botão, anima seu background
+            if (botao) {
+                botao.style.animation = `botao-brilho ${config.duration}ms linear`;
             }
-        `;
-        document.head.appendChild(style);
+        }, config.delay);
+
+        // Após a animação terminar, restaura o background original do botão e armazena a versão atual
+        setTimeout(() => {
+            glowBefore.remove();
+            glowAfter.remove();
+            if (botao) {
+                botao.style.animation = '';
+                botao.style.background = backgroundOriginal;
+            }
+            GM_setValue('ultimaVersaoEfeitoBrilho', versaoAtual);
+        }, config.duration + config.delay);
     }
-
-    // Configura os estilos específicos para este container
-    glowBefore.style.background = `conic-gradient(from 0deg, ${config.colors.before.join(',')})`;
-    glowBefore.style.filter = `blur(${config.blur.before}px)`;
-    glowAfter.style.background = `conic-gradient(from 0deg, ${config.colors.after.join(',')})`;
-    glowAfter.style.filter = `blur(${config.blur.after}px)`;
-
-    // Adiciona os elementos de brilho ao container
-    container.appendChild(glowBefore);
-    container.appendChild(glowAfter);
-
-    // Após a animação terminar, marca o efeito como executado
-    setTimeout(() => {
-        glowBefore.remove();
-        glowAfter.remove();
-        GM_setValue('efeitoBrilhoExecutado', true);
-    }, config.duration);
 }
 
 })();
