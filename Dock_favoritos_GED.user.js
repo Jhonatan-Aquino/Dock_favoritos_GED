@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Barra de favoritos do GED
 // @namespace    http://tampermonkey.net/
-// @version      1.5.3
+// @version      1.5.4
 // @description  Adiciona uma barra de favoritos flutuante ao sistema GED
 // @author        Jhonatan Aquino
 // @match         https://*.sigeduca.seduc.mt.gov.br/ged/*
@@ -24,7 +24,8 @@
 
     // Verificar se a página tem o atributo data-page="tela-documento" ou se é um popup de mensagem
     if (document.documentElement.getAttribute('data-page') === 'tela-documento' ||
-        document.title === 'Popup de Mensagem') {
+        document.title === 'Popup de Mensagem'||
+        document.title === 'Tela Documento') {
         return; // Não executa o script se for a tela de documento ou popup de mensagem
     }
 
