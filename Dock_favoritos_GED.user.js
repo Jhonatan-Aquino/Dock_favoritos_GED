@@ -213,29 +213,30 @@
 
     ];
 
+  
     // Array de cores disponíveis - cores modernas e vibrantes com bom contraste
     const coresDisponiveis = [
-        '#D95F89', // Rosa Material
-        '#FF4081', // Rosa Vibrante
+        '#E91E63', // Rosa Vibrante
+        '#C2185B', // Rosa Profundo
         '#9C27B0', // Roxo Material
-        '#673AB7', // Roxo Profundo
-        '#7C4DFF', // Roxo Vibrante
+        '#7B1FA2', // Roxo Profundo
+        '#673AB7', // Índigo Profundo
         '#3F51B5', // Índigo
-        '#2196F3', // Azul Material
-        '#00BCD4', // Ciano Material
-        '#00E5FF', // Ciano Brilhante
-        '#607D8B', // Azul Cinza
-        '#009688', // Verde-água
-        '#4CAF50', // Verde Material
-        '#8BC34A', // Verde Limão
-        '#CDDC39', // Verde Lima
-        '#FFC107', // Âmbar
-        '#FF9800', // Laranja Material
-        '#FF5722', // Laranja Profundo
-        '#795548',  // Marrom
-        '#757575', // Cinza Médio com leve toque de marrom
-        '#616161', // Cinza Médio com leve toque de terracota
-        '#424242'  // Cinza Médio com leve toque de rosa
+        '#1976D2', // Azul Material
+        '#0288D1', // Azul Profundo
+        '#0097A7', // Turquesa
+        '#00796B', // Verde-água Profundo
+        '#388E3C', // Verde Material
+        '#689F38', // Verde Limão
+        '#AFB42B', // Verde Lima
+        '#FBC02D', // Amarelo
+        '#FFA000', // Laranja Material
+        '#F57C00', // Laranja Profundo
+        '#E64A19', // Laranja Queimado
+        '#5D4037', // Marrom Profundo
+        '#455A64', // Azul Cinza
+        '#37474F', // Azul Cinza Profundo
+        '#263238'  // Azul Cinza Escuro
     ];
 
     // Função para obter uma cor que não foi usada recentemente
