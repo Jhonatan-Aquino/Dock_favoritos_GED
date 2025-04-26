@@ -232,7 +232,10 @@
         '#FFC107', // Âmbar
         '#FF9800', // Laranja Material
         '#FF5722', // Laranja Profundo
-        '#795548'  // Marrom
+        '#795548',  // Marrom
+        '#757575', // Cinza Médio com leve toque de marrom
+        '#616161', // Cinza Médio com leve toque de terracota
+        '#424242'  // Cinza Médio com leve toque de rosa
     ];
 
     // Função para obter uma cor que não foi usada recentemente
@@ -353,6 +356,7 @@
         }
         #ged-favorites-dock.hover-f .dock-item,  #ged-favorites-dock.hover-f .separador{
             filter: blur(10px);
+            pointer-events: none;
         }
 
         .dock-item {
