@@ -349,7 +349,7 @@
             left: 0;
         }
         #ged-favorites-dock.hover-f{
-            min-height: 410px;
+            min-height: 445px;
         }
         #ged-favorites-dock.hover-f .dock-item,  #ged-favorites-dock.hover-f .separador{
             filter: blur(10px);
