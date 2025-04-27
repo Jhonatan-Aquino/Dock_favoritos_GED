@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Barra de favoritos do GED
 // @namespace    http://tampermonkey.net/
-// @version      1.6.1
+// @version      1.6.2
 // @description  Adiciona uma barra de favoritos flutuante ao sistema GED
 // @author        Jhonatan Aquino
 // @match         https://*.sigeduca.seduc.mt.gov.br/ged/*
@@ -213,7 +213,6 @@
 
     ];
 
-  
     // Array de cores disponíveis - cores modernas e vibrantes com bom contraste
     const coresDisponiveis = [
         '#E91E63', // Rosa Vibrante
@@ -276,18 +275,19 @@
     // Adicionar estilos CSS
     GM_addStyle(`
         #ged-favorites-dock {
+            background:rgba(237, 237, 237, 0.75);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+            -webkit-backdrop-filter: blur(6.6px);
+            border:1px solid rgba(214, 214, 214, 0.47);
             position: fixed;
             left: -240px;
             top: 50%;
             transform: translateY(-50%);
             width: 250px;
-            background: rgba(220, 220, 220, 0.6);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(0, 0, 0, 0.04);
             border-radius: 25px !important;
             padding: 8px 11px 8px 20px;
-            box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.1);
             transition: left 0.3s ease;
             z-index: 9999;
         }
@@ -336,7 +336,7 @@
             width: 20px;
             height: 20px;
             transform: translateY(-50%);
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.4)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgb(41, 50, 84)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E");
             background-size: contain;
             background-repeat: no-repeat;
             transition: opacity 0.3s ease;
@@ -382,6 +382,18 @@
             width: 40px;
             height: 40px;
             opacity: 0;
+        }
+        .dock-item[data-atual="sim"]::after{
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: -2px;
+            width: 4px;
+            height: 4px;
+            background-color: rgb(11, 154, 0);
+            border-radius: 50%;
+            transform: translateX(-50%) translateY(-50%);
+            opacity: 1;
         }
 
         .dock-item.new-item {
@@ -459,9 +471,10 @@
             border: 1px solid rgba(0, 0, 0, 0.1);
             overflow: hidden;
             height: fit-content;
-            transform: translateY(-20px);
+            transform: translateY(-55%) translateX(-42%) scale(0.1);
+            z-index:0;
             opacity: 0 !important;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
         .popupeditar.visible {
@@ -556,12 +569,14 @@
         }
 
         .popupeditar .botao-confirmar {
-            background:  rgba(52, 165, 104, 0.8);
             border: solid 1px rgba(52, 165, 104, 0.8);
+            background: rgba(52, 165, 104, 1);
+
         }
 
         .popupeditar .botao-confirmar:hover {
-            background: rgba(52, 165, 104, 1);
+            background:  rgba(52, 165, 104, 0.8);
+
         }
 
         .popupeditar .botao-cancelar {
@@ -613,6 +628,7 @@
             padding-left: 7px;
             filter: blur(0px) !important;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2;
         }
         .editando-item:hover .edit-favorite, .editando-item:hover .remove-favorite{
             display: none;
@@ -934,8 +950,13 @@
         item.href = favorito.url;
         item.draggable = true;
 
+        // Verificar se é a página atual
+        if (favorito.url === window.location.href) {
+            item.setAttribute('data-atual', 'sim');
+        }
+
         item.innerHTML = `
-            <i class="edit-favorite" data-url="${favorito.url}"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></i>
+            <i class="edit-favorite" data-url="${favorito.url}"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></i>
             <div class="color-indicator" style="background-color: ${favorito.color}"> ${icosvg} </div>
             <span>${favorito.title}</span>
             <i class="remove-favorite" data-url="${favorito.url}"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></i>
@@ -1514,7 +1535,7 @@ function adicionarEfeitoBrilhoFlexivel(containerSelector, options = {}) {
                 const input = popupEditar.querySelector('input');
                 input.focus();
             }, 200);
-        }, 400);
+        }, 200);
 
 
         // Preencher os valores atuais
@@ -1616,6 +1637,7 @@ function adicionarEfeitoBrilhoFlexivel(containerSelector, options = {}) {
                 barra.classList.remove('hover-f');
                 cloneItem.style.top = `${itemFavorito.getBoundingClientRect().top-barraRect.top-5}px`;
                 cloneItem.style.left = `${itemFavorito.getBoundingClientRect().left}px`;
+                cloneItem.style.opacity = '0';
                 setTimeout(() => {
                     cloneItem.remove();
                 }, 300);
