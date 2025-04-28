@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Barra de favoritos do GED
 // @namespace    http://tampermonkey.net/
-// @version      1.6.2
+// @version      1.6.3
 // @description  Adiciona uma barra de favoritos flutuante ao sistema GED
 // @author        Jhonatan Aquino
 // @match         https://*.sigeduca.seduc.mt.gov.br/ged/*
@@ -340,6 +340,7 @@
             background-size: contain;
             background-repeat: no-repeat;
             transition: opacity 0.3s ease;
+            z-index:1;
         }
 
         #ged-favorites-dock:hover .dock-item {
@@ -472,7 +473,7 @@
             overflow: hidden;
             height: fit-content;
             transform: translateY(-55%) translateX(-42%) scale(0.1);
-            z-index:0;
+            z-index:2;
             opacity: 0 !important;
             transition: all 0.2s ease;
         }
@@ -628,7 +629,7 @@
             padding-left: 7px;
             filter: blur(0px) !important;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 2;
+            z-index: 3;
         }
         .editando-item:hover .edit-favorite, .editando-item:hover .remove-favorite{
             display: none;
