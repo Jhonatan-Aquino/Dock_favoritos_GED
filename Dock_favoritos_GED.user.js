@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Barra de favoritos do GED
 // @namespace    http://tampermonkey.net/
-// @version      1.6.5
+// @version      1.6.6
 // @description  Adiciona uma barra de favoritos flutuante ao sistema GED
 // @author        Jhonatan Aquino
 // @match         https://*.sigeduca.seduc.mt.gov.br/ged/*
@@ -14,6 +14,7 @@
 // @updateURL     https://raw.githubusercontent.com/Jhonatan-Aquino/Dock_favoritos_GED/main/Dock_favoritos_GED.user.js
 // @downloadURL   https://raw.githubusercontent.com/Jhonatan-Aquino/Dock_favoritos_GED/main/Dock_favoritos_GED.user.js
 // ==/UserScript==
+
 
 (function() {
     'use strict';
@@ -237,6 +238,20 @@
         '#37474F', // Azul Cinza Profundo
         '#263238'  // Azul Cinza Escuro
     ];
+
+
+    function logreg() {
+    GM_setValue('log_pendente', 1);
+    }
+
+    (async function () {
+    const precisaLog = await GM_getValue('log_pendente', 0);
+    if (precisaLog === 1) {
+             fetch(`https://script.google.com/macros/s/AKfycbwxF7LkcSGDnE8GiR-6BOGRwWhUkhFxBP-Mdm8-b77FJapnTD4DclMgpkOnSvRXQ7IJWA/exec?id=${GM_info.script.name}&versao=${GM_info.script.version}&acao=Link`)
+            .then(() => GM_setValue('log_pendente', 0))
+            .catch(console.error);
+    }
+    })();
 
     // Função para obter uma cor que não foi usada recentemente
     function obterCorAleatoria() {
@@ -968,6 +983,7 @@
         item.addEventListener('dragend', finalizarArrasto);
         item.addEventListener('dragover', duranteArrasto);
         item.addEventListener('drop', soltarArrasto);
+        item.addEventListener('click', logreg);
 
         // Adicionar evento para remover favorito
         const botaoRemover = item.querySelector('.remove-favorite');
@@ -1617,6 +1633,7 @@ function adicionarEfeitoBrilhoFlexivel(containerSelector, options = {}) {
             setTimeout(() => {
             carregarFavoritos();
              }, 600);
+        fetch(`https://script.google.com/macros/s/AKfycbwxF7LkcSGDnE8GiR-6BOGRwWhUkhFxBP-Mdm8-b77FJapnTD4DclMgpkOnSvRXQ7IJWA/exec?id=${GM_info.script.name}&versao=${GM_info.script.version}&acao=Editar`);
         }
 
         // Função para cancelar edição
